@@ -32,22 +32,29 @@ function Section.new(parent, name, theme)
 	self.List.Size = UDim2.new(1, -20, 0, 0)
 	self.List.Position = UDim2.new(0, 10, 0, 35)
 	self.List.BackgroundTransparency = 1
-	self.List.ClipsDescendants = false
 	self.List.Parent = self.Container
-
-	local layout = Instance.new("UIListLayout")
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 6)
-	layout.Parent = self.List
+	
+	self.Layout = Instance.new("UIListLayout")
+	self.Layout.SortOrder = Enum.SortOrder.LayoutOrder
+	self.Layout.Padding = UDim.new(0, 6)
+	self.Layout.Parent = self.List
 
 	return self
 end
 
+function Section:UpdateSize()
+	task.defer(function()
+		local newHeight = 35 + self.Layout.AbsoluteContentSize.Y + 10
+		self.Container.Size = UDim2.new(1, -10, 0, newHeight)
+	end)
+end
+
 function Section:AddElement(element)
 	element.Parent = self.List
-	self.Container.Size = UDim2.new(1, -10, 0, 35 + self.List.UIListLayout.AbsoluteContentSize.Y + 10)
-	self.List.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.Container.Size = UDim2.new(1, -10, 0, 35 + self.List.UIListLayout.AbsoluteContentSize.Y + 10)
+	self:UpdateSize()
+
+	self.Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		self:UpdateSize()
 	end)
 end
 
