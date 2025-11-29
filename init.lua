@@ -5,18 +5,26 @@ local FastDexUI = {
 }
 
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
 local BASE_URL = "https://raw.githubusercontent.com/decentholograms/FastDex-UILibrary/main/modules/"
 
 local function loadModule(file)
 	local ok, result = pcall(function()
-		return loadstring(game:HttpGet(BASE_URL .. file))()
+		local code = game:HttpGet(BASE_URL .. file)
+		return loadstring(code)()
 	end)
-	return ok and result or nil
+
+	if not ok then
+		warn("Failed loading module:", file, result)
+		return nil
+	end
+
+	if type(result) ~= "table" then
+		warn("Module did not return a table:", file)
+		return nil
+	end
+
+	return result
 end
 
 local ThemeModule           = loadModule("theme.lua")
@@ -38,25 +46,30 @@ if ThemeModule then
 	FastDexUI._THEMES = ThemeModule.GetDefaultThemes()
 end
 
-function FastDexUI.RegisterTheme(name, data)
-	if name and data then
-		FastDexUI._THEMES[name] = data
-	end
-end
-
 function FastDexUI.CreateUI(name, opts)
 	opts = opts or {}
-	local theme = opts.theme or "dark"
 
+	if not WindowModule then
+		error("Window module is NIL — window.lua no existe, o no retorna nada.")
+	end
+
+	if not WindowModule.Create then
+		error("Window module NO TIENE 'Create' — revisá el return del archivo window.lua.")
+	end
+
+	local theme = opts.theme or "dark"
 	if not FastDexUI._THEMES[theme] then
 		theme = "dark"
 	end
 
 	local ui = WindowModule.Create(name, FastDexUI._THEMES[theme], opts)
-	table.insert(FastDexUI._INSTANCES, ui)
+
+	if not ui then
+		error("WindowModule.Create devolvió NIL — hay errores dentro de window.lua.")
+	end
 
 	ui._themeModule = ThemeModule
-	ui._notifier = NotifierModule.Create(ui.ScreenGui)
+	ui._notifier = NotifierModule and NotifierModule.Create and NotifierModule.Create(ui.ScreenGui)
 
 	ui.NewSection = function(self, title)
 		return SectionModule.Create(self, title)
@@ -65,13 +78,6 @@ function FastDexUI.CreateUI(name, opts)
 	ui.Notify = function(self, msg, duration, persistent)
 		if self._notifier then
 			self._notifier:Show(msg, duration, persistent)
-		end
-	end
-
-	ui.SetTheme = function(self, themeName)
-		if FastDexUI._THEMES[themeName] then
-			self._currentTheme = FastDexUI._THEMES[themeName]
-			ThemeModule.ApplyTheme(self, self._currentTheme)
 		end
 	end
 
