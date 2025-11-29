@@ -2,66 +2,65 @@ local InputModule = {}
 
 function InputModule.Create(id, opts, parent, theme)
 	opts = opts or {}
-	local placeholder = opts.placeholder or "Enter text..."
+	local placeholder = opts.placeholder or "enter text..."
 	local default = opts.default or ""
 	local callback = opts.callback or function() end
-	
+
 	local input = {
 		ID = id,
 		_value = default,
 		_callback = callback
 	}
-	
+
 	local frame = Instance.new("Frame")
-	frame.Name = "Input_" .. id
-	frame.Size = UDim2.new(1, 0, 0, 36)
+	frame.Name = "input_" .. id
+	frame.Size = UDim2.new(1, 0, 0, 34)
 	frame.BackgroundTransparency = 1
 	frame.Parent = parent
-	
-	local inputBox = Instance.new("TextBox")
-	inputBox.Size = UDim2.new(1, 0, 1, 0)
-	inputBox.BackgroundColor3 = theme.Secondary
-	inputBox.BorderSizePixel = 0
-	inputBox.Text = default
-	inputBox.PlaceholderText = placeholder
-	inputBox.TextColor3 = theme.Text
-	inputBox.PlaceholderColor3 = theme.SubText
-	inputBox.TextSize = 13
-	inputBox.Font = Enum.Font.Gotham
-	inputBox.TextXAlignment = Enum.TextXAlignment.Left
-	inputBox.ClearTextOnFocus = false
-	inputBox.Parent = frame
-	
+
+	local box = Instance.new("TextBox")
+	box.Size = UDim2.new(1, 0, 1, 0)
+	box.BackgroundColor3 = theme.secondary
+	box.BorderSizePixel = 0
+	box.Text = default
+	box.PlaceholderText = placeholder
+	box.TextColor3 = theme.text
+	box.PlaceholderColor3 = theme.subtext
+	box.TextSize = 13
+	box.Font = Enum.Font.Gotham
+	box.TextXAlignment = Enum.TextXAlignment.Left
+	box.ClearTextOnFocus = false
+	box.Parent = frame
+
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 6)
-	corner.Parent = inputBox
-	
+	corner.Parent = box
+
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = theme.Border
+	stroke.Color = theme.border
 	stroke.Thickness = 1
-	stroke.Parent = inputBox
-	
-	local padding = Instance.new("UIPadding")
-	padding.PaddingLeft = UDim.new(0, 10)
-	padding.PaddingRight = UDim.new(0, 10)
-	padding.Parent = inputBox
-	
-	inputBox.FocusLost:Connect(function(enterPressed)
-		input._value = inputBox.Text
-		if enterPressed then
-			callback(inputBox.Text)
-		end
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = box
+
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 10)
+	pad.PaddingRight = UDim.new(0, 10)
+	pad.Parent = box
+
+	box.FocusLost:Connect(function(enter)
+		input._value = box.Text
+		if enter then callback(box.Text) end
 	end)
-	
-	function input:SetValue(value)
-		self._value = value
-		inputBox.Text = value
+
+	function input:SetValue(v)
+		self._value = v
+		box.Text = v
 	end
-	
+
 	function input:GetValue()
 		return self._value
 	end
-	
+
 	return input
 end
 
