@@ -10,7 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
-local BASE_URL = "https://github.com/decentholograms/FastDex-UILibrary/blob/main/"
+local BASE_URL = "https://raw.githubusercontent.com/decentholograms/FastDex-UILibrary/blob/main/"
 
 local function loadModule(path)
 	local success, result = pcall(function()
@@ -68,4 +68,5 @@ function FastDexUI.CreateUI(name, opts)
 end
 
 return FastDexUI
+
 
