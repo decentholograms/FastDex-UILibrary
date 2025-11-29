@@ -2,128 +2,118 @@ local NotifierModule = {}
 local TweenService = game:GetService("TweenService")
 
 function NotifierModule.Create(parent)
-	local notifier = {
-		_notifications = {},
-		_container = nil
-	}
+	local n = {}
+	n._list = {}
 
 	local container = Instance.new("Frame")
-	container.Name = "NotificationContainer"
-	container.Size = UDim2.new(0, 320, 1, -20)
-	container.Position = UDim2.new(1, -330, 0, 10)
+	container.Name = "notif_container"
+	container.Size = UDim2.new(0, 300, 1, -20)
+	container.Position = UDim2.new(1, -310, 0, 10)
 	container.BackgroundTransparency = 1
 	container.Parent = parent
-	notifier._container = container
+	n._c = container
 
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.Padding = UDim.new(0, 8)
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-	listLayout.Parent = container
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 8)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = container
 
-	function notifier:Show(message, duration, persistent)
-		duration = duration or 3
-		persistent = persistent or false
+	function n:Show(msg, time, sticky)
+		time = time or 3
 
-		local notifFrame = Instance.new("Frame")
-		notifFrame.Size = UDim2.new(1, 0, 0, 0)
-		notifFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-		notifFrame.BorderSizePixel = 0
-		notifFrame.BackgroundTransparency = 1
-		notifFrame.Parent = container
+		local f = Instance.new("Frame")
+		f.Size = UDim2.new(1, 0, 0, 0)
+		f.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+		f.BackgroundTransparency = 1
+		f.BorderSizePixel = 0
+		f.Parent = container
 
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 8)
-		corner.Parent = notifFrame
+		corner.Parent = f
 
 		local stroke = Instance.new("UIStroke")
-		stroke.Color = Color3.fromRGB(88, 101, 242)
+		stroke.Color = Color3.fromRGB(90, 110, 255)
 		stroke.Thickness = 2
 		stroke.Transparency = 1
-		stroke.Parent = notifFrame
+		stroke.Parent = f
 
-		local padding = Instance.new("UIPadding")
-		padding.PaddingTop = UDim.new(0, 12)
-		padding.PaddingBottom = UDim.new(0, 12)
-		padding.PaddingLeft = UDim.new(0, 15)
-		padding.PaddingRight = UDim.new(0, 15)
-		padding.Parent = notifFrame
+		local pad = Instance.new("UIPadding")
+		pad.PaddingTop = UDim.new(0, 12)
+		pad.PaddingBottom = UDim.new(0, 12)
+		pad.PaddingLeft = UDim.new(0, 14)
+		pad.PaddingRight = UDim.new(0, 14)
+		pad.Parent = f
 
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Size = UDim2.new(1, persistent and -30 or 0, 1, 0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.Text = message
-		textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-		textLabel.TextSize = 13
-		textLabel.Font = Enum.Font.Gotham
-		textLabel.TextWrapped = true
-		textLabel.TextXAlignment = Enum.TextXAlignment.Left
-		textLabel.TextYAlignment = Enum.TextYAlignment.Top
-		textLabel.Parent = notifFrame
+		local text = Instance.new("TextLabel")
+		text.BackgroundTransparency = 1
+		text.Size = UDim2.new(1, sticky and -25 or 0, 1, 0)
+		text.Text = msg
+		text.TextColor3 = Color3.new(1, 1, 1)
+		text.TextSize = 13
+		text.Font = Enum.Font.Gotham
+		text.TextWrapped = true
+		text.TextXAlignment = Enum.TextXAlignment.Left
+		text.TextYAlignment = Enum.TextYAlignment.Top
+		text.Parent = f
 
-		local finalHeight = textLabel.TextBounds.Y + 24
+		local h = text.TextBounds.Y + 24
 
-		if persistent then
-			local closeBtn = Instance.new("TextButton")
-			closeBtn.Size = UDim2.new(0, 20, 0, 20)
-			closeBtn.Position = UDim2.new(1, -20, 0, 0)
-			closeBtn.BackgroundTransparency = 1
-			closeBtn.Text = "✕"
-			closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-			closeBtn.TextSize = 14
-			closeBtn.Font = Enum.Font.GothamBold
-			closeBtn.Parent = notifFrame
+		if sticky then
+			local cbtn = Instance.new("TextButton")
+			cbtn.BackgroundTransparency = 1
+			cbtn.Size = UDim2.new(0, 20, 0, 20)
+			cbtn.Position = UDim2.new(1, -20, 0, 0)
+			cbtn.Font = Enum.Font.GothamBold
+			cbtn.Text = "✕"
+			cbtn.TextSize = 14
+			cbtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+			cbtn.Parent = f
 
-			closeBtn.MouseButton1Click:Connect(function()
-				self:Remove(notifFrame)
+			cbtn.MouseButton1Click:Connect(function()
+				self:Remove(f)
 			end)
 		end
 
-		TweenService:Create(notifFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-			Size = UDim2.new(1, 0, 0, finalHeight),
+		TweenService:Create(f, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
+			Size = UDim2.new(1, 0, 0, h),
 			BackgroundTransparency = 0
 		}):Play()
 
-		TweenService:Create(stroke, TweenInfo.new(0.3), {
-			Transparency = 0
-		}):Play()
+		TweenService:Create(stroke, TweenInfo.new(0.25), { Transparency = 0 }):Play()
 
-		table.insert(self._notifications, notifFrame)
+		table.insert(self._list, f)
 
-		if not persistent then
-			task.delay(duration, function()
-				self:Remove(notifFrame)
+		if not sticky then
+			task.delay(time, function()
+				self:Remove(f)
 			end)
 		end
 	end
 
-	function notifier:Remove(notifFrame)
-		if not notifFrame or not notifFrame.Parent then return end
+	function n:Remove(f)
+		if not f or not f.Parent then return end
 
-		TweenService:Create(notifFrame, TweenInfo.new(0.2), {
+		local s = f:FindFirstChildOfClass("UIStroke")
+
+		TweenService:Create(f, TweenInfo.new(0.2), {
 			Size = UDim2.new(1, 0, 0, 0),
 			BackgroundTransparency = 1
 		}):Play()
 
-		local stroke = notifFrame:FindFirstChild("UIStroke")
-		if stroke then
-			TweenService:Create(stroke, TweenInfo.new(0.2), {
-				Transparency = 1
-			}):Play()
+		if s then
+			TweenService:Create(s, TweenInfo.new(0.2), { Transparency = 1 }):Play()
 		end
 
-		task.delay(0.25, function()
-			notifFrame:Destroy()
-			for i, notif in ipairs(self._notifications) do
-				if notif == notifFrame then
-					table.remove(self._notifications, i)
-					break
-				end
+		task.delay(0.23, function()
+			f:Destroy()
+			for i, v in ipairs(self._list) do
+				if v == f then table.remove(self._list, i) break end
 			end
 		end)
 	end
 
-	return notifier
+	return n
 end
 
 return NotifierModule
