@@ -1,9 +1,9 @@
 local WindowModule = {}
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
-local UIS = game:GetService("UserInputService")
+local Players       = game:GetService("Players")
+local TweenService  = game:GetService("TweenService")
+local HttpService   = game:GetService("HttpService")
+local UIS           = game:GetService("UserInputService")
 
 local BASE_URL = "https://raw.githubusercontent.com/decentholograms/FastDex-UILibrary/main/modules/"
 
@@ -11,12 +11,23 @@ local function loadModule(path)
 	local ok, result = pcall(function()
 		return loadstring(game:HttpGet(BASE_URL .. path))()
 	end)
-	return ok and result or nil
+
+	if not ok then
+		warn("[FastDexUI] Error loading module:", path, result)
+		return nil
+	end
+
+	if type(result) ~= "table" then
+		warn("[FastDexUI] Module did not return a table:", path)
+		return nil
+	end
+
+	return result
 end
 
-local SectionModule = loadModule("section.lua")
+local SectionModule     = loadModule("section.lua")
 local ConfigPanelModule = loadModule("configPanel.lua")
-local FloatingIconModule = loadModule("floatingIcon.lua")
+local FloatingIconModule= loadModule("floatingIcon.lua")
 
 function WindowModule.Create(name, theme, opts)
 	opts = opts or {}
@@ -28,12 +39,12 @@ function WindowModule.Create(name, theme, opts)
 	}
 
 	local player = Players.LocalPlayer
-
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "FastDexUI_" .. name
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
+
 	window.ScreenGui = gui
 
 	local main = Instance.new("Frame")
@@ -43,6 +54,7 @@ function WindowModule.Create(name, theme, opts)
 	main.BackgroundColor3 = theme.Background
 	main.BorderSizePixel = 0
 	main.Parent = gui
+
 	window.Frame = main
 
 	local corner = Instance.new("UICorner")
@@ -71,16 +83,18 @@ function WindowModule.Create(name, theme, opts)
 	close.Position = UDim2.new(1, -40, 0, 0)
 	close.BackgroundTransparency = 1
 	close.TextColor3 = theme.Error
-	close.TextSize = 16
 	close.Font = Enum.Font.GothamBold
+	close.TextSize = 16
 	close.Parent = topbar
 
 	close.MouseButton1Click:Connect(function()
 		main.Visible = false
 		if not window._floating then
-			window._floating = FloatingIconModule and FloatingIconModule.Create(gui, theme, function()
-				main.Visible = true
-			end)
+			if FloatingIconModule and FloatingIconModule.Create then
+				window._floating = FloatingIconModule.Create(gui, theme, function()
+					main.Visible = true
+				end)
+			end
 		end
 	end)
 
@@ -116,7 +130,10 @@ function WindowModule.Create(name, theme, opts)
 	UIS.InputChanged:Connect(function(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 			local delta = input.Position - dragStart
-			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			main.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y
+			)
 		end
 	end)
 
@@ -126,11 +143,27 @@ function WindowModule.Create(name, theme, opts)
 		end
 	end)
 
+
 	function window:Section(text)
-		if not SectionModule then return end
-		local s = SectionModule.Create(self, text, self._currentTheme, scroll)
-		table.insert(self.Sections, s)
-		return s
+		if not SectionModule then
+			warn("[FastDexUI] SectionModule is NIL")
+			return nil
+		end
+
+		if not SectionModule.Create then
+			warn("[FastDexUI] SectionModule missing Create() function")
+			return nil
+		end
+
+		local section = SectionModule.Create(self, text, self._currentTheme, scroll)
+
+		if not section then
+			warn("[FastDexUI] SectionModule.Create returned NIL")
+			return nil
+		end
+
+		table.insert(self.Sections, section)
+		return section
 	end
 
 	return window
