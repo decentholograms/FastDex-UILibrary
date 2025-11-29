@@ -20,13 +20,13 @@ A complete, modern, and lightweight UI library for Roblox (Luau) that loads dire
 Load FastDexUI directly from GitHub:
 
 ```lua
-local FastDexUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/decentholograms/FastDex-UILibrary/init.lua"))()
+local FastDexUI = loadstring(game:HttpGet("https://github.com/decentholograms/FastDex-UILibrary/blob/main/init.lua"))()
 ```
 
 ## Quick Start
 
 ```lua
-local FastDexUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/decentholograms/FastDex-UILibrary/init.lua"))()
+local FastDexUI = loadstring(game:HttpGet("https://github.com/decentholograms/FastDex-UILibrary/blob/main/init.lua"))()
 
 local ui = FastDexUI.CreateUI("My Panel", { theme = "dark" })
 
@@ -303,3 +303,4 @@ For issues or feature requests, please open an issue on GitHub.
 ---
 
 Made with ❤️ by FastDex Corporation
+
