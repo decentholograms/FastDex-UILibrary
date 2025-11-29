@@ -1,4 +1,5 @@
 local UserInputService = game:GetService("UserInputService")
+
 local Slider = {}
 Slider.__index = Slider
 
@@ -7,8 +8,9 @@ function Slider.new(name, min, max, default, theme, callback)
 
 	self.Min = min or 0
 	self.Max = max or 100
-	self.Value = default or min or 0
+	self.Value = default or self.Min
 	self.Callback = callback or function() end
+	self.Dragging = false
 
 	self.Frame = Instance.new("Frame")
 	self.Frame.Name = name
@@ -21,6 +23,7 @@ function Slider.new(name, min, max, default, theme, callback)
 	corner.Parent = self.Frame
 
 	local title = Instance.new("TextLabel")
+	title.Name = "Title"
 	title.Size = UDim2.new(1, -60, 0, 18)
 	title.Position = UDim2.new(0, 10, 0, 5)
 	title.BackgroundTransparency = 1
@@ -53,36 +56,37 @@ function Slider.new(name, min, max, default, theme, callback)
 	local fillCorner = Instance.new("UICorner")
 	fillCorner.CornerRadius = UDim.new(1, 0)
 	fillCorner.Parent = fill
+	
+	local function update(mouseX)
+		local absPos = bar.AbsolutePosition.X
+		local absSize = bar.AbsoluteSize.X
+		local pos = math.clamp((mouseX - absPos) / absSize, 0, 1)
 
-	local dragging = false
-
-	local function update(inputPos)
-		local barAbs = bar.AbsolutePosition.X
-		local barSize = bar.AbsoluteSize.X
-		local pos = math.clamp((inputPos - barAbs) / barSize, 0, 1)
 		local value = math.floor(min + (max - min) * pos)
 		self.Value = value
+
 		title.Text = name .. ": " .. tostring(value)
 		fill.Size = UDim2.new(pos, 0, 1, 0)
+
 		self.Callback(value)
 	end
 
 	bar.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
+			self.Dragging = true
 			update(input.Position.X)
 		end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		if self.Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 			update(input.Position.X)
 		end
 	end)
 
 	UserInputService.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
+			self.Dragging = false
 		end
 	end)
 
