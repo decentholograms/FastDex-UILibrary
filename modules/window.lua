@@ -3,6 +3,7 @@ local WindowModule = {}
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
+local UIS = game:GetService("UserInputService")
 
 local BASE_URL = "https://raw.githubusercontent.com/decentholograms/FastDex-UILibrary/main/modules/"
 
@@ -33,7 +34,6 @@ function WindowModule.Create(name, theme, opts)
 	gui.ResetOnSpawn = false
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.Parent = player:WaitForChild("PlayerGui")
-
 	window.ScreenGui = gui
 
 	local main = Instance.new("Frame")
@@ -43,7 +43,6 @@ function WindowModule.Create(name, theme, opts)
 	main.BackgroundColor3 = theme.Background
 	main.BorderSizePixel = 0
 	main.Parent = gui
-
 	window.Frame = main
 
 	local corner = Instance.new("UICorner")
@@ -79,7 +78,7 @@ function WindowModule.Create(name, theme, opts)
 	close.MouseButton1Click:Connect(function()
 		main.Visible = false
 		if not window._floating then
-			window._floating = FloatingIconModule.Create(gui, theme, function()
+			window._floating = FloatingIconModule and FloatingIconModule.Create(gui, theme, function()
 				main.Visible = true
 			end)
 		end
@@ -100,11 +99,36 @@ function WindowModule.Create(name, theme, opts)
 	layout.Parent = scroll
 
 	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+		scroll.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
 	end)
 
-	function window:Section(name)
-		local s = SectionModule.Create(self, name, self._currentTheme, scroll)
+	local dragging = false
+	local dragStart, startPos
+
+	topbar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = main.Position
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+
+	function window:Section(text)
+		if not SectionModule then return end
+		local s = SectionModule.Create(self, text, self._currentTheme, scroll)
 		table.insert(self.Sections, s)
 		return s
 	end
